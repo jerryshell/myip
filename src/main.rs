@@ -2,8 +2,9 @@ use axum::{routing::get, Router};
 use myip::*;
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::info;
+use tracing::{info, instrument};
 
+#[instrument]
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -19,10 +20,11 @@ async fn main() {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(4000);
-    info!("port: {}", port);
+    info!("port={}", port);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    info!("address on: {}", addr);
+    info!("addr={}", addr);
+
     axum::Server::bind(&addr)
         .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .await
