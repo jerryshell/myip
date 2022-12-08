@@ -1,6 +1,6 @@
 # Myip
 
-*Myip* is a server application that responds to the client IP address.
+*Myip* is a server application that responds to the client IP info.
 
 Link: [myip.d8s.fun](https://myip.d8s.fun)
 
