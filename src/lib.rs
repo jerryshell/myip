@@ -6,11 +6,16 @@ use serde_json::{json, Value};
 use tracing::{info, instrument};
 
 #[instrument]
-pub async fn ip(ClientIp(client_ip): ClientIp) -> (StatusCode, Json<Value>) {
-    let service = Service::IpApi;
+pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, Json<Value>) {
     let client_ip = client_ip.to_string();
     info!(client_ip);
-    match Locator::get(&client_ip, service).await {
+    ip(&client_ip).await
+}
+
+#[instrument]
+pub async fn ip(client_ip: &str) -> (StatusCode, Json<Value>) {
+    let service = Service::IpApi;
+    match Locator::get(client_ip, service).await {
         Ok(ip) => {
             let result = json!({
              "ip": ip.ip,

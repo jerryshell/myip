@@ -14,7 +14,7 @@ async fn main() {
         .allow_methods(Any)
         .allow_headers(Any);
 
-    let app = Router::new().route("/", get(ip)).layer(cors);
+    let app = Router::new().route("/", get(ip_service)).layer(cors);
 
     let port = std::env::var("PORT")
         .ok()
