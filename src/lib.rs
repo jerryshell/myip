@@ -2,7 +2,7 @@ use anyhow::Result;
 use axum::http::StatusCode;
 use axum_client_ip::ClientIp;
 use axum_extra::response::ErasedJson;
-use cached::proc_macro::cached;
+use cached::proc_macro::once;
 use ipgeolocate::{Locator, Service};
 use serde_json::{json, Map, Value};
 use tracing::instrument;
@@ -23,7 +23,7 @@ pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, ErasedJso
 }
 
 #[instrument]
-#[cached(time = 60, result = true)]
+#[once(time = 60, result = true, sync_writes = true)]
 pub async fn ip(client_ip: String) -> Result<Map<String, Value>> {
     match Locator::get(&client_ip, Service::IpApi).await {
         Ok(ip) => {
