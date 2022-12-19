@@ -1,15 +1,18 @@
 use axum::http::StatusCode;
 use axum::Json;
 use axum_client_ip::ClientIp;
+use axum_extra::response::ErasedJson;
 use ipgeolocate::{Locator, Service};
 use serde_json::{json, Value};
 use tracing::{info, instrument};
 
 #[instrument]
-pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, Json<Value>) {
+pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, ErasedJson) {
     let client_ip = client_ip.to_string();
     info!(client_ip);
-    ip(&client_ip).await
+    let (status_code, response_json) = ip(&client_ip).await;
+    let response_map = response_json.as_object().unwrap();
+    (status_code, ErasedJson::pretty(response_map))
 }
 
 #[instrument]
