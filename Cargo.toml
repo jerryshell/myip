@@ -16,6 +16,7 @@ axum-client-ip = "0.3.0"
 ipgeolocate = { git = "https://github.com/jerryshell/ipgeolocate", default-features = false, features = [
     "h1-client-rustls",
 ] }
+anyhow = "1.0.68"
 
 [profile.release]
 lto = true

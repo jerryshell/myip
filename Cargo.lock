@@ -1065,6 +1065,7 @@ dependencies = [
 name = "myip"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "axum-client-ip",
  "axum-extra",

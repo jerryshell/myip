@@ -1,24 +1,31 @@
+use anyhow::Result;
 use axum::http::StatusCode;
-use axum::Json;
 use axum_client_ip::ClientIp;
 use axum_extra::response::ErasedJson;
 use ipgeolocate::{Locator, Service};
-use serde_json::{json, Value};
-use tracing::{info, instrument};
+use serde_json::{json, Map, Value};
+use tracing::instrument;
 
 #[instrument]
 pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, ErasedJson) {
     let client_ip = client_ip.to_string();
-    info!(client_ip);
-    let (status_code, response_json) = ip(&client_ip).await;
-    let response_map = response_json.as_object().unwrap();
-    (status_code, ErasedJson::pretty(response_map))
+    let result = ip(&client_ip).await;
+    match result {
+        Ok(ip_info_map) => (StatusCode::OK, ErasedJson::pretty(ip_info_map)),
+        Err(e) => (
+            StatusCode::BAD_REQUEST,
+            ErasedJson::pretty(json! ({
+                "error": e.to_string(),
+                "repository": "https://github.com/jerryshell/myip",
+                "license": "https://choosealicense.com/licenses/agpl-3.0",
+            })),
+        ),
+    }
 }
 
 #[instrument]
-pub async fn ip(client_ip: &str) -> (StatusCode, Json<Value>) {
-    let service = Service::IpApi;
-    match Locator::get(client_ip, service).await {
+pub async fn ip(client_ip: &str) -> Result<Map<String, Value>> {
+    match Locator::get(client_ip, Service::IpApi).await {
         Ok(ip) => {
             let result = json!({
              "ip": ip.ip,
@@ -28,20 +35,11 @@ pub async fn ip(client_ip: &str) -> (StatusCode, Json<Value>) {
              "region": ip.region,
              "country": ip.country,
              "timezone": ip.timezone,
-             "sourceCode": "https://github.com/jerryshell/myip",
+             "repository": "https://github.com/jerryshell/myip",
              "license": "https://choosealicense.com/licenses/agpl-3.0",
             });
-            info!("result={}", result);
-            (StatusCode::OK, Json(result))
+            Ok(result.as_object().unwrap().to_owned())
         }
-        Err(error) => {
-            let result = json!({
-             "error": error.to_string(),
-             "sourceCode": "https://github.com/jerryshell/myip",
-             "license": "https://choosealicense.com/licenses/agpl-3.0",
-            });
-            info!("result={}", result);
-            (StatusCode::BAD_REQUEST, Json(result))
-        }
+        Err(e) => Err(e.into()),
     }
 }
