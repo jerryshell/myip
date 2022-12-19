@@ -17,6 +17,7 @@ ipgeolocate = { git = "https://github.com/jerryshell/ipgeolocate", default-featu
     "h1-client-rustls",
 ] }
 anyhow = "1.0.68"
+cached = "0.41.0"
 
 [profile.release]
 lto = true

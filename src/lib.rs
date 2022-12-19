@@ -2,15 +2,14 @@ use anyhow::Result;
 use axum::http::StatusCode;
 use axum_client_ip::ClientIp;
 use axum_extra::response::ErasedJson;
+use cached::proc_macro::cached;
 use ipgeolocate::{Locator, Service};
 use serde_json::{json, Map, Value};
 use tracing::instrument;
 
 #[instrument]
 pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, ErasedJson) {
-    let client_ip = client_ip.to_string();
-    let result = ip(&client_ip).await;
-    match result {
+    match ip(client_ip.to_string()).await {
         Ok(ip_info_map) => (StatusCode::OK, ErasedJson::pretty(ip_info_map)),
         Err(e) => (
             StatusCode::BAD_REQUEST,
@@ -24,8 +23,9 @@ pub async fn ip_service(ClientIp(client_ip): ClientIp) -> (StatusCode, ErasedJso
 }
 
 #[instrument]
-pub async fn ip(client_ip: &str) -> Result<Map<String, Value>> {
-    match Locator::get(client_ip, Service::IpApi).await {
+#[cached(time = 60, result = true)]
+pub async fn ip(client_ip: String) -> Result<Map<String, Value>> {
+    match Locator::get(&client_ip, Service::IpApi).await {
         Ok(ip) => {
             let result = json!({
              "ip": ip.ip,
