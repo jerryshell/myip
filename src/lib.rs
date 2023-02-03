@@ -40,6 +40,14 @@ pub async fn ip(client_ip: String) -> Result<Map<String, Value>> {
             });
             Ok(result.as_object().unwrap().to_owned())
         }
-        Err(e) => Err(e.into()),
+        Err(e) => {
+            tracing::warn!("{}", e);
+            let result = json!({
+             "ip": client_ip,
+             "repository": "https://github.com/jerryshell/myip",
+             "license": "https://choosealicense.com/licenses/agpl-3.0",
+            });
+            Ok(result.as_object().unwrap().to_owned())
+        }
     }
 }
