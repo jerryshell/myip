@@ -1,32 +1,27 @@
-use axum::{routing::get, Router};
-use myip::*;
-use std::net::SocketAddr;
-use tower_http::cors::{Any, CorsLayer};
-use tracing::{info, instrument};
-
-#[instrument]
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods(Any)
-        .allow_headers(Any);
+    let cors = tower_http::cors::CorsLayer::new()
+        .allow_origin(tower_http::cors::Any)
+        .allow_methods(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any);
 
-    let app = Router::new().route("/", get(ip_service)).layer(cors);
+    let app = axum::Router::new()
+        .route("/", axum::routing::get(myip::ip_service))
+        .layer(cors);
 
     let port = std::env::var("PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(4000);
-    info!("port={}", port);
+    tracing::info!("port={}", port);
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    info!("addr={}", addr);
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
+    tracing::info!("addr={}", addr);
 
     axum::Server::bind(&addr)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+        .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
         .await
         .expect("axum::Server::bind().serve() err");
 }
