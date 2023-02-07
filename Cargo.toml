@@ -13,6 +13,8 @@ tower-http = { version = "0.3.5", features = ["cors"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.92"
 cached = "0.42.0"
+ipinfo = { git = "https://github.com/jerryshell/ipinfo-rust-lib" }
+dotenv = "0.15"
 
 [profile.release]
 lto = true

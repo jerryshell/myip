@@ -1,5 +1,15 @@
 #[tokio::main]
 async fn main() {
+    // init env
+    dotenv::dotenv().ok();
+
+    // init ipinfo
+    let ipinfo_config = ipinfo::IpInfoConfig {
+        token: Some(std::env::var("IPINFO_TOKEN").unwrap()),
+        ..Default::default()
+    };
+    let ipinfo = ipinfo::IpInfo::new(ipinfo_config).expect("should construct");
+
     tracing_subscriber::fmt::init();
 
     let cors = tower_http::cors::CorsLayer::new()
@@ -9,7 +19,10 @@ async fn main() {
 
     let app = axum::Router::new()
         .route("/", axum::routing::get(myip::ip_service))
-        .layer(cors);
+        .layer(cors)
+        .layer(axum::Extension(std::sync::Arc::from(
+            std::sync::Mutex::from(ipinfo),
+        )));
 
     let port = std::env::var("PORT")
         .ok()
