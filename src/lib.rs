@@ -25,7 +25,8 @@ pub async fn ip_service(
     }
 }
 
-#[cached::proc_macro::once(time = 60, result = true)]
+// 60 * 60 * 24 = 86400 = 24h
+#[cached::proc_macro::once(time = 86400, result = true)]
 pub async fn get_ip_info(
     ipinfo_arc: std::sync::Arc<std::sync::Mutex<ipinfo::IpInfo>>,
     client_ip: &str,
