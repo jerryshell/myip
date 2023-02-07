@@ -4,11 +4,15 @@ async fn main() {
     dotenv::dotenv().ok();
 
     // init ipinfo
-    let ipinfo_config = ipinfo::IpInfoConfig {
-        token: Some(std::env::var("IPINFO_TOKEN").unwrap()),
-        ..Default::default()
-    };
-    let ipinfo = ipinfo::IpInfo::new(ipinfo_config).expect("should construct");
+    let ipinfo = tokio::task::spawn_blocking(move || {
+        let ipinfo_config = ipinfo::IpInfoConfig {
+            token: Some(std::env::var("IPINFO_TOKEN").unwrap()),
+            ..Default::default()
+        };
+        ipinfo::IpInfo::new(ipinfo_config).expect("should construct")
+    })
+    .await
+    .unwrap();
 
     tracing_subscriber::fmt::init();
 

@@ -7,7 +7,7 @@ pub async fn ip_service(
     let header_value_iter = request_header_map.get_all("x-forwarded-for").iter();
     let client_ip = match header_value_iter.last() {
         None => client_ip.ip().to_string(),
-        Some(client_ip) => client_ip.to_str().unwrap().to_string(),
+        Some(client_ip) => client_ip.to_str().unwrap().to_owned(),
     };
     match get_ip_info(ipinfo_arc, &client_ip).await {
         Ok(ip_info_map) => (
@@ -30,7 +30,14 @@ pub async fn get_ip_info(
     ipinfo_arc: std::sync::Arc<std::sync::Mutex<ipinfo::IpInfo>>,
     client_ip: &str,
 ) -> Result<serde_json::Map<String, serde_json::Value>, String> {
-    match ipinfo_arc.lock().unwrap().lookup(&[client_ip]) {
+    let client_ip_for_spawn = client_ip.to_string();
+    let result = tokio::task::spawn_blocking(move || {
+        ipinfo_arc.lock().unwrap().lookup(&[&client_ip_for_spawn])
+    })
+    .await
+    .unwrap();
+
+    match result {
         Err(e) => Err(e.to_string()),
         Ok(result) => {
             let result = serde_json::json!({
@@ -40,6 +47,40 @@ pub async fn get_ip_info(
              "license": "https://choosealicense.com/licenses/agpl-3.0",
             });
             Ok(result.as_object().unwrap().to_owned())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod get_ip_info {
+        #[tokio::test]
+        async fn test() -> Result<(), Box<dyn std::error::Error>> {
+            dotenv::dotenv().ok();
+
+            let ipinfo_config = ipinfo::IpInfoConfig {
+                token: Some(std::env::var("IPINFO_TOKEN").unwrap()),
+                ..Default::default()
+            };
+            let ipinfo = tokio::task::spawn_blocking(|| {
+                ipinfo::IpInfo::new(ipinfo_config).expect("should construct")
+            })
+            .await
+            .unwrap();
+            let ipinfo_arc = std::sync::Arc::from(std::sync::Mutex::from(ipinfo));
+
+            let result = crate::get_ip_info(ipinfo_arc, "8.8.8.8").await.unwrap();
+            assert_eq!(
+                result
+                    .get("detail")
+                    .unwrap()
+                    .get("hostname")
+                    .unwrap()
+                    .to_owned(),
+                "dns.google".to_owned()
+            );
+
+            Ok(())
         }
     }
 }
