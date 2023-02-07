@@ -1,15 +1,17 @@
-# Myip
+# myip
 
-*Myip* is a server application that responds to the client IP info.
+*myip* is a server application that responds client-side IP information.
 
-Link: [myip.d8s.fun](https://myip.d8s.fun)
+Demo: [myip.d8s.fun](https://myip.d8s.fun)
 
-Before running the project, create a `.env` file in the root directory of the project and fill in the content:
+## IPinfo Token
+
+To run this project, you need to first create a `.env` file in the root directory of the project, and then fill in the content:
 
 ```env
 IPINFO_TOKEN=your_token
 ```
 
-## LICENSE
+## License
 
 [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0)
