@@ -9,6 +9,7 @@ pub async fn ip_service(
         None => client_ip.ip().to_string(),
         Some(client_ip) => client_ip.to_str().unwrap().to_owned(),
     };
+    tracing::info!("client_ip {client_ip}");
     match get_ip_info(ipinfo_arc, &client_ip).await {
         Ok(ip_info_map) => (
             axum::http::StatusCode::OK,
@@ -25,8 +26,6 @@ pub async fn ip_service(
     }
 }
 
-// 60 * 60 * 24 = 86400 = 24h
-#[cached::proc_macro::once(time = 86400, result = true)]
 pub async fn get_ip_info(
     ipinfo_arc: std::sync::Arc<std::sync::Mutex<ipinfo::IpInfo>>,
     client_ip: &str,
