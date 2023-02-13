@@ -14,13 +14,16 @@ async fn main() {
     .await
     .unwrap();
 
+    // init tracing
     tracing_subscriber::fmt::init();
 
+    // cors
     let cors = tower_http::cors::CorsLayer::new()
         .allow_origin(tower_http::cors::Any)
         .allow_methods(tower_http::cors::Any)
         .allow_headers(tower_http::cors::Any);
 
+    // route
     let app = axum::Router::new()
         .route("/", axum::routing::get(myip::ip_service))
         .layer(cors)
@@ -28,15 +31,18 @@ async fn main() {
             std::sync::Mutex::from(ipinfo),
         )));
 
+    // port
     let port = std::env::var("PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(4000);
     tracing::info!("port={}", port);
 
+    // addr
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("addr={}", addr);
 
+    // run app
     axum::Server::bind(&addr)
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
         .await

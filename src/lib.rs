@@ -1,15 +1,20 @@
 pub async fn ip_service(
     axum::Extension(ipinfo_arc): axum::Extension<std::sync::Arc<std::sync::Mutex<ipinfo::IpInfo>>>,
-    axum::extract::ConnectInfo(client_ip): axum::extract::ConnectInfo<std::net::SocketAddr>,
+    axum::extract::ConnectInfo(connect_info): axum::extract::ConnectInfo<std::net::SocketAddr>,
     request_header_map: axum::http::HeaderMap,
 ) -> (axum::http::StatusCode, axum_extra::response::ErasedJson) {
-    tracing::info!("{:?}", request_header_map);
+    tracing::info!("request_header_map {:?}", request_header_map);
+
     let header_value_iter = request_header_map.get_all("x-forwarded-for").iter();
     let client_ip = match header_value_iter.last() {
-        None => client_ip.ip().to_string(),
-        Some(client_ip) => client_ip.to_str().unwrap().to_owned(),
+        None => connect_info.ip().to_string(),
+        Some(header_value) => match header_value.to_str() {
+            Ok(header_value_str) => header_value_str.to_string(),
+            Err(_) => connect_info.ip().to_string(),
+        },
     };
     tracing::info!("client_ip {client_ip}");
+
     match get_ip_info(ipinfo_arc, &client_ip).await {
         Ok(ip_info_map) => (
             axum::http::StatusCode::OK,
