@@ -4,16 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { version = "0.6", features = ["http2"] }
-axum-extra = { version = "0.7", features = ["erased-json"] }
-tokio = { version = "1.27", features = ["full"] }
-tracing = "0.1"
-tracing-subscriber = "0.3"
-tower-http = { version = "0.4", features = ["cors"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+axum = { version = "*", features = ["http2"] }
+axum-extra = { version = "*", features = ["erased-json"] }
+tokio = { version = "*", features = ["full"] }
+tracing = "*"
+tracing-appender = "*"
+tracing-subscriber = "*"
+tower-http = { version = "*", features = ["cors"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
 ipinfo = { git = "https://github.com/jerryshell/ipinfo-rust-lib" }
-dotenv = "0.15"
+dotenv = "*"
 
 [profile.release]
 lto = true
