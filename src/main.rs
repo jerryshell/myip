@@ -51,8 +51,9 @@ async fn main() {
     tracing::info!("socket_addr {}", socket_addr);
 
     // run app
-    axum::Server::bind(&socket_addr)
-        .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
+    let app = app.into_make_service_with_connect_info::<std::net::SocketAddr>();
+    let listener = tokio::net::TcpListener::bind(socket_addr)
         .await
-        .expect("axum serve err");
+        .expect("bind failed");
+    axum::serve(listener, app).await.expect("serve failed");
 }
